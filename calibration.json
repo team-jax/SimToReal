@@ -1,10 +1,10 @@
 {
-  "about": "Sim joint angle -> motor command: motor_deg = zero_deg + sign * scale * sim_deg. sim_range_deg is the joint range in IK/motion2/arm/arm.xml (tests check it). AK45 commands also stay within zero_deg +- limit_deg; servo commands within 0..180. verified=false means the joint/motor pairing, sign and zero are still assumptions (2026-11-05).",
+  "about": "Sim joint angle -> motor command: motor_deg = zero_deg + sign * scale * sim_deg. sim_range_deg is the joint range in IK/motion2/arm/arm.xml (tests check it). AK45 commands also stay within zero_deg +- limit_deg (set to cover the sim range, 2026-11-05; it was 15 before); servo commands within 0..180. verified=false means the joint/motor pairing, sign and zero are still assumptions (2026-11-05).",
   "joints": [
-    {"joint": "shoulder_roll", "motor": "ak45", "id": 1, "name": "AK45_1", "sign": 1, "scale": 1.0, "zero_deg": 0.0, "sim_range_deg": [-45.0, 45.0], "verified": false, "limit_deg": 15.0},
-    {"joint": "shoulder_yaw", "motor": "ak45", "id": 2, "name": "AK45_2", "sign": 1, "scale": 1.0, "zero_deg": 0.0, "sim_range_deg": [0.0, 45.0], "verified": false, "limit_deg": 15.0},
-    {"joint": "upper_arm_roll", "motor": "ak45", "id": 3, "name": "AK45_3", "sign": 1, "scale": 1.0, "zero_deg": 0.0, "sim_range_deg": [-90.0, 240.0], "verified": false, "limit_deg": 15.0},
-    {"joint": "elbow", "motor": "ak45", "id": 4, "name": "AK45_4", "sign": 1, "scale": 1.0, "zero_deg": 0.0, "sim_range_deg": [-105.0, 105.0], "verified": false, "limit_deg": 15.0},
+    {"joint": "shoulder_roll", "motor": "ak45", "id": 1, "name": "AK45_1", "sign": 1, "scale": 1.0, "zero_deg": 0.0, "sim_range_deg": [-45.0, 45.0], "verified": false, "limit_deg": 45.0},
+    {"joint": "shoulder_yaw", "motor": "ak45", "id": 2, "name": "AK45_2", "sign": 1, "scale": 1.0, "zero_deg": 0.0, "sim_range_deg": [0.0, 45.0], "verified": false, "limit_deg": 45.0},
+    {"joint": "upper_arm_roll", "motor": "ak45", "id": 3, "name": "AK45_3", "sign": 1, "scale": 1.0, "zero_deg": 0.0, "sim_range_deg": [-90.0, 240.0], "verified": false, "limit_deg": 240.0},
+    {"joint": "elbow", "motor": "ak45", "id": 4, "name": "AK45_4", "sign": 1, "scale": 1.0, "zero_deg": 0.0, "sim_range_deg": [-105.0, 105.0], "verified": false, "limit_deg": 105.0},
     {"joint": "wrist_pitch", "motor": "servo", "id": 9, "name": "W_PITCH", "sign": 1, "scale": 1.0, "zero_deg": 90.0, "sim_range_deg": [-90.0, 90.0], "verified": false},
     {"joint": "wrist_yaw", "motor": "servo", "id": 8, "name": "W_YAW", "sign": 1, "scale": 1.0, "zero_deg": 90.0, "sim_range_deg": [-90.0, 90.0], "verified": false},
     {"joint": "hand_roll", "motor": "servo", "id": 7, "name": "W_X", "sign": 1, "scale": 1.0, "zero_deg": 90.0, "sim_range_deg": [-120.0, 120.0], "verified": false},

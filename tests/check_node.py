@@ -80,7 +80,10 @@ def main():
 
     send(["elbow"], [30.0])
     run(1.0)
-    check("elbow 30 deg is clipped to zero + limit 15", round(got[-1].position[0], 6), round(radians(15.0), 6))
+    check("elbow 30 deg passes (limit covers the sim range)", round(got[-1].position[0], 6), round(radians(30.0), 6))
+    send(["elbow"], [120.0])
+    run(1.0)
+    check("elbow 120 deg is clipped to the sim range, 105", round(got[-1].position[0], 6), round(radians(105.0), 6))
 
     # play_trajectory's frames go through sim2real_node to the motors
     import threading

@@ -17,7 +17,7 @@ colcon build --symlink-install 2>&1 | grep -E -i "warning|error|Finished|Failed"
 source install/setup.bash
 ros2 pkg executables sim2real
 echo "{\"joint_names\": [\"elbow\"], \"dt\": 0.02, \"positions\": [[0.0], [0.01]]}" > /tmp/t.json && ros2 run sim2real play_trajectory /tmp/t.json --dry-run
-ros2 launch sim2real sim2real.launch.py --show-args | head -12
+ros2 launch sim2real sim2real.launch.py --show-args > /tmp/args.txt && grep -c default /tmp/args.txt  # no pipe into head: an early close is a BrokenPipeError traceback
 cd /ws/src/SimToReal && python3 tests/check_protocol.py --ik /nonexistent | tail -1
 python3 tests/check_node.py
 '
