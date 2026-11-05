@@ -1,4 +1,4 @@
-# sim-to-real — 시뮬 관절각을 실물 JAX 팔로
+# SimToReal — 시뮬 관절각을 실물 JAX 팔로
 
 시뮬(team-jax/IK의 `motion2/arm/arm.xml`, 동작 1·2가 같이 쓰는 모델)의 관절각을 실물 모터 명령으로 바꿔 CAN으로 보낸다. 지금은 **1단계: 관절 하나씩 보정**이다. 관절마다 시뮬 0°에 해당하는 모터 각도, 방향, 배율을 찾아 `calibration.json`에 적는다.
 
