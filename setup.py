@@ -21,6 +21,7 @@ setup(
         "console_scripts": [
             "sim2real_node = sim2real.node:main",
             "calibrate = sim2real.calibrate:main",
+            "play_trajectory = sim2real.play:main",
         ],
     },
 )

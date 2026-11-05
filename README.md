@@ -72,6 +72,23 @@ ros2 topic pub -t 3 -r 10 /sim2real/joint_command sensor_msgs/msg/JointState \
 - AK45는 `/joint_states` 피드백 위치에서 출발하고, 피드백이 없으면 움직이지 않는다.
 - 서보의 첫 명령은 바로 그 각도로 간다. CAN_STM은 첫 명령 전에 펄스를 내지 않아서 위치를 모른다.
 
+## 3단계: 실물 좌표의 큐브를 집어 옮기기 (회전각 포함)
+
+카메라가 준 큐브 위치·회전각과 놓을 곳으로 시뮬(team-jax/IK 동작 1)을 먼저 돌리고, 그 관절 궤적을 실물로 재생한다.
+
+```bash
+# IK 저장소에서: 실물 좌표(어깨 롤 모터 축 원점, x 왼쪽 +, y 뒤 +, m; 회전각은 위에서 볼 때 반시계, °)
+JAX_SETUP=real venv/bin/python motion1/scripts/run_real.py --cube 0.10 -0.30 20 --target 0.05 -0.27 --out traj.json
+#   닿지 않으면 종료 코드 3, 시뮬에서 실패하면 1, 성공하면 0. traj.json = 관절 13개(rad)의 50 Hz 궤적
+
+# 로봇 컴퓨터에서 (sim2real.launch.py가 떠 있는 상태)
+ros2 run sim2real play_trajectory traj.json --dry-run   # 걸리는 시간, 보정 표에 막히는 관절 확인
+ros2 run sim2real play_trajectory traj.json             # 첫 자세에서 5 s 기다린 뒤 재생
+```
+
+- 시뮬은 실물이 허용하는 속도보다 빠르다(예: `hand_roll` 162°/s). 그래서 가장 빠른 관절이 `--max-speed`(기본 30°/s, `sim2real_node`의 `max_speed_deg_s`와 맞출 것)에 맞도록 전체를 느리게 재생한다. 14 s짜리 배달이 약 80 s가 된다.
+- `--dry-run`은 `calibration.json`의 범위에 막혀 잘릴 관절을 알려 준다. **지금 AK45는 ±15°(`limit_deg`)라 실물 높이 배치의 궤적(팔꿈치 76~105°, 상완 회전 11~81° 등)은 대부분 잘린다.** 보정을 마치고 실제 기구 한계를 확인한 뒤 `limit_deg`를 올려야 이 단계가 의미 있다.
+
 ## 구성
 
 | 파일 | 내용 |
@@ -83,6 +100,7 @@ ros2 topic pub -t 3 -r 10 /sim2real/joint_command sensor_msgs/msg/JointState \
 | `sim2real/ros_io.py` | `/ak45/command`·`/joint_states`, 서보 CAN 송신 |
 | `sim2real/node.py` | `sim2real_node` |
 | `sim2real/calibrate.py` | 보정 CLI(`ros2 run sim2real calibrate --ros`, 기본은 dry-run) |
+| `sim2real/play.py` | `play_trajectory`: IK `run_real.py`의 궤적을 속도 제한에 맞게 느리게 `/sim2real/joint_command`로 보냄 |
 | `launch/sim2real.launch.py` | ak45_node(그 패키지의 yaml 그대로)와 sim2real_node |
 | `tests/check_protocol.py` | 장치 없이 바이트를 확인한다(Mac에서도 됨). 기대값은 아래 근거 문서에서 가져왔다 |
 | `tests/check_node.py`, `tests/docker_check.sh` | ros:jazzy 이미지에서 세 저장소를 빌드하고, 가상 CAN 버스로 sim2real_node를 끝까지 확인한다 |
@@ -109,4 +127,4 @@ ros2 topic pub -t 3 -r 10 /sim2real/joint_command sensor_msgs/msg/JointState \
 
 - **실물 실행:** Docker Desktop for Mac에는 CAN 소켓이 없어서 ak45_node가 시작하지 못한다. 실물 확인은 Ubuntu 컴퓨터에서 위 순서로 한다.
 - **종료:** ak45_node를 끄면 AK45가 힘을 놓는다(ak45_ros2 README §6). 먼저 팔을 받친다. sim2real_node나 calibrate를 끄는 것만으로는 AK45가 마지막 목표를 유지한다(ak45_node가 계속 재송신).
-- **다음 단계:** 시뮬 궤적(동작 1 상태기계, 동작 2 IK)을 `/sim2real/joint_command`로 보내는 발행 노드는 보정이 끝난 뒤에 만든다.
+- **궤적은 열린 루프다.** 시뮬에서 계산한 관절각을 그대로 재생하고, 실물 큐브가 미끄러졌는지는 보지 않는다. 실물 높이 배치는 지금 손으로 시뮬에서도 배달 2/100이다(IK `motion1/STATUS.md`).

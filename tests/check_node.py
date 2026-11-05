@@ -82,6 +82,27 @@ def main():
     run(1.0)
     check("elbow 30 deg is clipped to zero + limit 15", round(got[-1].position[0], 6), round(radians(15.0), 6))
 
+    # play_trajectory's frames go through sim2real_node to the motors
+    import threading
+    from sim2real.play import play
+    traj = {"joint_names": ["elbow", "wrist_pitch"], "dt": 0.02,
+            "positions": [[radians(-12.0), radians(10.0)], [radians(-13.0), radians(12.0)]]}
+    sent = []
+
+    def publish(names, positions):
+        msg = JointState()
+        msg.name, msg.position = list(names), list(positions)
+        commands.publish(msg)
+        sent.append(1)
+
+    t = threading.Thread(target=play, args=(publish, traj, 300.0, 0.3))
+    t.start()
+    frames = run(1.5)
+    t.join()
+    check("play: all frames published", len(sent), 3 + 1)
+    check("play: elbow ends at -13 deg", round(got[-1].position[0], 6), round(radians(-13.0), 6))
+    check("play: wrist_pitch servo ends at 90 + 12 deg", frames[-1], "005#0903FC")
+
     node.destroy_node()
     fake.destroy_node()
     servo_rx.shutdown()

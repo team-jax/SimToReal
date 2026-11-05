@@ -10,7 +10,7 @@ Expected bytes come from the sources, not from this code:
 import argparse
 import sys
 import xml.etree.ElementTree as ET
-from math import degrees
+from math import degrees, radians
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -120,6 +120,23 @@ def main():
     check("session refuses an AK45 angle past the limit", len(out.sent), n)
     s.handle("m -10")
     check("session AK45 goes to /ak45/command in rad", out.sent[-1], "/ak45/command ak45_4 -0.17453 rad (-10 deg)")
+
+    # trajectory playback: slowed so the fastest joint keeps to the speed limit
+    from sim2real.play import schedule, play
+    traj = {"joint_names": ["elbow", "wrist_pitch"], "dt": 0.02,
+            "positions": [[0.0, 0.0], [radians(3.0), 0.0], [radians(3.0), radians(-1.0)]]}
+    period, slow, peak = schedule(traj, 30.0)
+    check("play: peak joint speed 3 deg in 20 ms", round(peak, 6), 150.0)
+    check("play: 5x slower at 30 deg/s", (round(slow, 6), round(period, 6)), (5.0, 0.1))
+    sent = []
+    play(lambda n, q: sent.append(list(q)), traj, 30.0, hold=0.3, sleep=lambda t: None)
+    check("play: first frame held 3 times, then the rest", len(sent), 3 + 2)
+    check("play: ends on the last frame", sent[-1], traj["positions"][-1])
+    from sim2real.play import clipped_joints
+    far = {"joint_names": ["elbow", "wrist_pitch"], "dt": 0.02,
+           "positions": [[radians(80.0), radians(10.0)], [radians(-5.0), radians(10.0)]]}
+    check("play: joints past the calibration are named", [(n, round(lo), round(hi), al) for n, lo, hi, al in
+          clipped_joints(far, cal)], [("elbow", -5, 80, [-15.0, 15.0])])
 
     # w writes a file that loads back to the same joints
     import tempfile
