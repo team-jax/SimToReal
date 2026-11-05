@@ -26,9 +26,10 @@ def ak45_topic_name(joint):
 
 
 class Ak45Topics:
-    def __init__(self, node):
+    def __init__(self, node, command=True):
+        """command=False: feedback only (pick_place and play_trajectory command through sim2real_node)."""
         self.node = node
-        self.pub = node.create_publisher(JointState, AK45_COMMAND, 10)
+        self.pub = node.create_publisher(JointState, AK45_COMMAND, 10) if command else None
         self.state = {}
         node.create_subscription(JointState, AK45_STATES, self._on_state, 10)
 

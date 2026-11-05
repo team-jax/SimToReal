@@ -22,6 +22,7 @@ setup(
             "sim2real_node = sim2real.node:main",
             "calibrate = sim2real.calibrate:main",
             "play_trajectory = sim2real.play:main",
+            "pick_place = sim2real.pick_place:main",
         ],
     },
 )

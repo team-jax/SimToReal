@@ -140,6 +140,43 @@ def main():
     check("play: joints past the calibration are named", [(n, round(lo), round(hi), al) for n, lo, hi, al in
           clipped_joints(far, cal)], [("elbow", -5, 110, [-105.0, 105.0])])
 
+    # watch: an AK45 more than max_error off (or silent) for longer than grace stops the playback
+    from sim2real.watch import TrackingWatch
+    w = TrackingWatch(15.0, 0.5)
+    check("watch: following", w.check({"ak45_4": 40.0}, {"ak45_4": 30.0}, 0.0), None)
+    check("watch: off, within grace", w.check({"ak45_4": 40.0}, {"ak45_4": 20.0}, 1.0), None)
+    check("watch: off past grace", w.check({"ak45_4": 40.0}, {"ak45_4": 20.0}, 1.6), "ak45_4: 20.0 deg from its command for 0.6 s")
+    check("watch: back on track resets", (w.check({"ak45_4": 40.0}, {"ak45_4": 39.0}, 1.7),
+          w.check({"ak45_4": 40.0}, {"ak45_4": 0.0}, 2.0)), (None, None))
+    check("watch: silent", TrackingWatch().check({"ak45_1": 0.0}, {"ak45_1": None}, 5.0) or
+          TrackingWatch().check({"ak45_1": 0.0}, {"ak45_1": None}, 5.0), None)
+    w = TrackingWatch()
+    w.check({"ak45_1": 0.0}, {"ak45_1": None}, 5.0)
+    check("watch: silent past grace", w.check({"ak45_1": 0.0}, {"ak45_1": None}, 5.6), "ak45_1: no feedback for 0.6 s")
+
+    # check_trajectory: never a failed run, --force for a retry, a cut joint or an unverified one
+    from sim2real.play import check_trajectory
+    good = {"joint_names": ["elbow"], "dt": 0.02, "positions": [[0.0], [radians(10.0)]], "status": "playable",
+            "playable": True, "delivered_in_sim": True}
+    verified = calibration.load()
+    for j in verified.joints:
+        j.verified = True
+    check("checks: clean, verified", check_trajectory(good, verified), (None, []))
+    check("checks: unverified named", check_trajectory(good, cal)[1],
+          ["calibration not verified (zero and direction are assumptions): elbow"])
+    check("checks: failed run is fatal", check_trajectory({**good, "status": "not delivered", "playable": False,
+          "delivered_in_sim": False, "reason": "x"}, verified)[0], "not delivered: x")
+    check("checks: a retry needs --force", len(check_trajectory({**good, "status": "retried", "playable": False,
+          "reason": "delivered only after a retry"}, verified)[1]), 1)
+    check("checks: old file without status, not delivered", check_trajectory({**good, "status": None, "playable": None,
+          "delivered_in_sim": False}, verified)[0] is not None, True)
+
+    # play stops when the watch says so
+    sent = []
+    calls = iter([None, "ak45_4: no feedback for 0.6 s"])
+    reason = play(lambda n, q: sent.append(q), traj, 30.0, hold=0.1, sleep=lambda t: None, watch=lambda f: next(calls))
+    check("play: stops on the watch's reason", (reason, len(sent)), ("ak45_4: no feedback for 0.6 s", 1 + 2))
+
     # w writes a file that loads back to the same joints
     import tempfile
     with tempfile.TemporaryDirectory() as d:
