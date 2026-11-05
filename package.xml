@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>sim2real</name>
+  <version>0.1.0</version>
+  <description>Sim joint angles (team-jax/IK arm model) to the real JAX arm: AK45 via ak45_ros2, servos via CAN_STM frames.</description>
+  <maintainer email="jeajune11117@gmail.com">jeajune0221</maintainer>
+  <license>TODO</license>
+
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>sensor_msgs</exec_depend>
+  <exec_depend>ament_index_python</exec_depend>
+  <exec_depend>launch</exec_depend>
+  <exec_depend>launch_ros</exec_depend>
+  <exec_depend>ak45_ros2</exec_depend>
+  <exec_depend>python3-can</exec_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>

@@ -69,8 +69,17 @@ class Calibration:
         path.write_text(f'{{\n  "about": {json.dumps(self.about, ensure_ascii=False)},\n  "joints": [\n{lines}\n  ]\n}}\n')
 
 
-def load(path=DEFAULT_FILE) -> Calibration:
-    path = Path(path)
+def default_file():
+    """The repository's calibration.json (also under colcon build --symlink-install), else the
+    copy installed in the package share directory."""
+    if DEFAULT_FILE.exists():
+        return DEFAULT_FILE
+    from ament_index_python.packages import get_package_share_directory
+    return Path(get_package_share_directory("sim2real")) / "calibration.json"
+
+
+def load(path=None) -> Calibration:
+    path = Path(path) if path else default_file()
     raw = json.loads(path.read_text())
     joints = [Joint(**j) for j in raw["joints"]]
     for j in joints:

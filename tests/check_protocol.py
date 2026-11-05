@@ -17,8 +17,8 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 from sim2real.protocol import servo_frame, ak45_pos_frame, parse_ak45_feedback
 from sim2real import calibration
-from sim2real.bus import DryBus, ramp
-from calibrate import Session
+from sim2real.motion import ramp, Mover
+from sim2real.calibrate import Session, DryOutput
 
 failures = []
 
@@ -95,20 +95,31 @@ def main():
     e = cal["elbow"]
     check("AK45 sim 30 clipped to zero +- limit", e.to_motor(30), (15.0, True))
     check("AK45 sim -10", e.to_motor(-10), (-10.0, False))
-    check("ramp ends on target", ramp(0, 10, 30)[-1], 10)
-    check("ramp step <= rate / 50 Hz", max(abs(b - a) for a, b in zip([0] + ramp(0, 10, 30), ramp(0, 10, 30))) <= 0.6 + 1e-9, True)
+    check("ramp ends on target", ramp(0, 10, 30, 50)[-1], 10)
+    check("ramp step <= rate / 50 Hz", max(abs(b - a) for a, b in zip([0] + ramp(0, 10, 30, 50), ramp(0, 10, 30, 50))) <= 0.6 + 1e-9, True)
 
-    # dry-run session: moves never leave the bounds
-    bus = DryBus(out=lambda s: None)
-    s = Session(cal, bus, 30, out=lambda s: None, sleep=lambda t: None)
+    # Mover (sim2real_node): steps of rate / hz, only after start()
+    mv = Mover(30, 50)
+    mv.set_target("elbow", 1.0)
+    check("mover waits for a start position", mv.step(), {})
+    mv.start("elbow", 0.0)
+    check("mover first step", round(mv.step()["elbow"], 6), 0.6)
+    check("mover ends on target", mv.step(), {"elbow": 1.0})
+    check("mover idle on target", mv.step(), {})
+
+    # dry-run session: AK45 to /ak45/command in rad, servos as CAN_STM frames; bounds hold
+    out = DryOutput(out=lambda s: None)
+    s = Session(cal, out, 30, out=lambda s: None, sleep=lambda t: None)
     s.handle("j W_PITCH"); s.handle("m 100"); s.handle("m +10")
-    check("session servo first move jumps, then ramps", [str(f) for f in bus.sent[:1]], ["005#0903E8"])
-    check("session servo ends at 110", str(bus.sent[-1]), "005#09044C")
-    n = len(bus.sent)
+    check("session servo first move jumps", out.sent[0], "can0 005#0903E8")
+    check("session servo ends at 110", out.sent[-1], "can0 005#09044C")
+    n = len(out.sent)
     s.handle("m 181")
-    check("session refuses a servo angle over 180", len(bus.sent), n)
+    check("session refuses a servo angle over 180", len(out.sent), n)
     s.handle("j elbow"); s.handle("m 20")
-    check("session refuses an AK45 angle past the limit", len(bus.sent), n)
+    check("session refuses an AK45 angle past the limit", len(out.sent), n)
+    s.handle("m -10")
+    check("session AK45 goes to /ak45/command in rad", out.sent[-1], "/ak45/command ak45_4 -0.17453 rad (-10 deg)")
 
     # w writes a file that loads back to the same joints
     import tempfile
