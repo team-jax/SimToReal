@@ -87,11 +87,11 @@ ros2 topic pub -t 3 -r 10 /sim2real/joint_command sensor_msgs/msg/JointState \
 # 터미널 1: ak45_node + sim2real_node
 ros2 launch sim2real sim2real.launch.py
 # 터미널 2: 큐브 x y 회전, 놓을 곳 x y
-ros2 run sim2real pick_place --cube 0.10 -0.30 20 --target 0.05 -0.27 --dry-run   # 계획과 검사만
-ros2 run sim2real pick_place --cube 0.10 -0.30 20 --target 0.05 -0.27
+ros2 run sim2real pick_place --cube 0.03 -0.30 -20 --target 0.05 -0.27 --dry-run   # 계획과 검사만
+ros2 run sim2real pick_place --cube 0.03 -0.30 -20 --target 0.05 -0.27
 ```
 
-좌표는 어깨 롤 모터 축이 원점이다. x는 로봇의 왼쪽 +, y는 뒤 +(앞이 −y), 단위 m다. 회전은 위에서 볼 때 반시계 방향으로, 큐브 한 면의 법선이 +x와 이루는 각(°)이다. 정육면체라 90°마다 같다. 거치대가 아니라 롤 모터 축 기준이다: 책상 가까운 모서리는 y = +0.042(거치대에서 10 cm, 롤 축보다 4.2 cm 뒤)다.
+좌표는 어깨 롤 모터 축이 원점이다. x는 로봇의 왼쪽 +, y는 뒤 +(앞이 −y), 단위 m다. 회전은 위에서 볼 때 반시계 방향으로, 큐브 한 면의 법선이 +x와 이루는 각(°)이다. 정육면체라 90°마다 같다. 거치대가 아니라 롤 모터 축 기준이다. 앞은 거치대의 FRONT 글자 쪽(책상 쪽)이고, 책상 앞 모서리는 y = −0.225(어깨 축에서 수평 22.5 cm 앞), 어깨 축은 책상 윗면 위 477.5 mm다(IK 2026-11-10, JaxIsaacLab deploy_2026-11-05와 같은 배치). 지금 손으로 닿는 곳은 앞 26~32 cm, 왼쪽 25 cm ~ 오른쪽 2 cm, 회전 −20° ~ +5° 정도다.
 
 **① 계획.** IK의 `real_task.plan_delivery`가 시뮬로 배달을 끝까지 돌린다(`planner.py`가 `--ik`, `$JAX_IK_DIR`, `~/IK`, 이 저장소 옆 순서로 IK를 찾는다). 닿지 않으면 종료 코드 3으로 끝난다.
 

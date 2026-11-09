@@ -1,7 +1,7 @@
 """pick_place: a cube on the real table, picked and set down, from its position and yaw alone.
 
-    ros2 run sim2real pick_place --cube 0.10 -0.30 20 --target 0.05 -0.27 --dry-run
-    ros2 run sim2real pick_place --cube 0.10 -0.30 20 --target 0.05 -0.27      # sim2real_node running
+    ros2 run sim2real pick_place --cube 0.03 -0.30 -20 --target 0.05 -0.27 --dry-run
+    ros2 run sim2real pick_place --cube 0.03 -0.30 -20 --target 0.05 -0.27      # sim2real_node running
 
 --cube x y yaw, --target x y: the real frame of team-jax/IK realcoords.py - origin on the shoulder
 roll motor's axis, x to the robot's left, y backwards (the front is -y), metres; yaw in degrees,
