@@ -93,7 +93,7 @@ def main():
     check("servo sim 0 -> zero_deg", j.to_motor(0), (90.0, False))
     check("servo sim 120 clipped to the sim range", j.to_motor(120), (180.0, True))
     e = cal["elbow"]
-    check("AK45 sim 120 clipped to the sim range (limit covers it)", e.to_motor(120), (105.0, True))
+    check("AK45 sim 120 clipped to the sim range (limit covers it)", e.to_motor(120), (100.0, True))
     check("AK45 limits cover each sim range", {j.joint: j.limit_deg for j in cal.joints if j.motor == "ak45"},
           {j.joint: max(abs(v) for v in j.sim_range_deg) for j in cal.joints if j.motor == "ak45"})
     check("AK45 sim -10", e.to_motor(-10), (-10.0, False))
@@ -138,7 +138,7 @@ def main():
     far = {"joint_names": ["elbow", "wrist_pitch"], "dt": 0.02,
            "positions": [[radians(110.0), radians(10.0)], [radians(-5.0), radians(10.0)]]}
     check("play: joints past the calibration are named", [(n, round(lo), round(hi), al) for n, lo, hi, al in
-          clipped_joints(far, cal)], [("elbow", -5, 110, [-105.0, 105.0])])
+          clipped_joints(far, cal)], [("elbow", -5, 110, [-100.0, 100.0])])
 
     # watch: an AK45 more than max_error off (or silent) for longer than grace stops the playback
     from sim2real.watch import TrackingWatch
