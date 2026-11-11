@@ -43,6 +43,11 @@ def main(argv=None):
     print(f"sim: {r['status']} ({r['reason']}), hand turned {s['hand_yaw_deg']:+.1f} deg, "
           f"{r['final_error_m'] * 1000:.1f} mm from the target"
           + (", retries " + ", ".join(f"{x['phase']}@{x['step']}" for x in r["retries"]) if r["retries"] else ""))
+    if "hand_half_turned" in s:   # IK 2026-11-10 and later: the grasp the sim chose
+        print(f"grasp: {'hand half-turned about its axis' if s['hand_half_turned'] else 'hand as usual'}, "
+              f"finger gap {s['grasp_off_faces_deg']:.1f} deg off the cube's faces"
+              + (" (off-face grasp: finger torque 1.5-2.6x in the sim, check it on the robot)"
+                 if abs(s["grasp_off_faces_deg"]) > 1.0 else ""))
     if a.save:
         with open(a.save, "w") as f:
             json.dump(r, f, indent=1)
